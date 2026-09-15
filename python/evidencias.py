@@ -10,10 +10,13 @@ def listar():
 
     banco.close()
 
-    print("\n--- EVIDÊNCIAS ---")
+    if dados:
+        print("\n--- EVIDÊNCIAS ---")
 
-    for evidencia in dados:
-        print(evidencia)
+        for registro in dados:
+            print(registro)
+    else:
+        print("Nenhuma evidência encontrada.")
 
 
 def pesquisar():
@@ -21,15 +24,15 @@ def pesquisar():
 
     banco = conectar()
 
-    evidencia = banco.execute("""
+    registro = banco.execute("""
         SELECT * FROM evidencias
         WHERE id = ?
     """, (id,)).fetchone()
 
     banco.close()
 
-    if evidencia:
-        print("\n--- EVIDÊNCIA ENCONTRADA ---")
-        print(evidencia)
+    if registro:
+        print("\nEvidência encontrada:")
+        print(registro)
     else:
         print("Evidência não encontrada.")

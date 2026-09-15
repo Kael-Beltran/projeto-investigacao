@@ -5,31 +5,34 @@ def listar():
     banco = conectar()
 
     dados = banco.execute("""
-        SELECT * FROM investigadores
+        SELECT * FROM casos
     """).fetchall()
 
     banco.close()
 
-    print("\n--- INVESTIGADORES ---")
+    if dados:
+        print("\n--- CASOS ---")
 
-    for investigador in dados:
-        print(investigador)
+        for registro in dados:
+            print(registro)
+    else:
+        print("Nenhum caso encontrado.")
 
 
 def pesquisar():
-    id = input("Digite o ID do investigador: ")
+    id = input("Digite o ID do caso: ")
 
     banco = conectar()
 
-    investigador = banco.execute("""
-        SELECT * FROM investigadores
+    registro = banco.execute("""
+        SELECT * FROM casos
         WHERE id = ?
     """, (id,)).fetchone()
 
     banco.close()
 
-    if investigador:
-        print("\n--- INVESTIGADOR ENCONTRADO ---")
-        print(investigador)
+    if registro:
+        print("\nCaso encontrado:")
+        print(registro)
     else:
-        print("Investigador não encontrado.")
+        print("Caso não encontrado.")

@@ -5,31 +5,34 @@ def listar():
     banco = conectar()
 
     dados = banco.execute("""
-        SELECT * FROM testemunhas
+        SELECT * FROM evidencias
     """).fetchall()
 
     banco.close()
 
-    print("\n--- TESTEMUNHAS ---")
+    if dados:
+        print("\n--- EVIDÊNCIAS ---")
 
-    for testemunha in dados:
-        print(testemunha)
+        for registro in dados:
+            print(registro)
+    else:
+        print("Nenhuma evidência encontrada.")
 
 
 def pesquisar():
-    id = input("Digite o ID da testemunha: ")
+    id = input("Digite o ID da evidência: ")
 
     banco = conectar()
 
-    testemunha = banco.execute("""
-        SELECT * FROM testemunhas
+    registro = banco.execute("""
+        SELECT * FROM evidencias
         WHERE id = ?
     """, (id,)).fetchone()
 
     banco.close()
 
-    if testemunha:
-        print("\n--- TESTEMUNHA ENCONTRADA ---")
-        print(testemunha)
+    if registro:
+        print("\nEvidência encontrada:")
+        print(registro)
     else:
-        print("Testemunha não encontrada.")
+        print("Evidência não encontrada.")
