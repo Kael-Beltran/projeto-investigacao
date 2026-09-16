@@ -6,49 +6,85 @@ cursor = conexao.cursor()
 cursor.execute("PRAGMA foreign_keys = ON;")
 
 
-def listar_e_buscar_suspeitos():
-    print("\n CASOS DISPONÍVEIS NO BANCO ")
-    cursor.execute("SELECT id, titulo, tipo_crime FROM casos")
-    todos_os_casos = cursor.fetchall()
-    pprint(todos_os_casos)
-
-
-    id_escolhido = input(
-        "Olhe a lista acima e digite o ID do caso que deseja investigar: "
-    )
-
-    caso_suspeitos = cursor.execute(
+def buscar_dados_por_caso(id_caso, tabela_alvo):
+    if tabela_alvo == "suspeitos":
+        query = """
+            SELECT s.nome AS suspeito, s.cpf, s.data_nascimento
+            FROM suspeitos AS s
+            WHERE s.caso_id = ?
         """
-        SELECT c.titulo AS caso, s.nome AS suspeito, s.cpf
-        FROM suspeitos AS s
-        INNER JOIN casos AS c ON s.caso_id = c.id
-        WHERE c.id = ?
-    """,
-        (id_escolhido,),
-    )
+    elif tabela_alvo == "evidencias":
+        query = """
+            SELECT e.descricao AS evidencia, e.tipo, e.local_encontrada
+            FROM evidencias AS e
+            WHERE e.caso_id = ?
+        """
+    elif tabela_alvo == "testemunhas":
+        query = """
+            SELECT t.nome AS testemunha, t.telefone, t.depoimento
+            FROM testemunhas AS t
+            WHERE t.caso_id = ?
+        """
 
-    resultado = caso_suspeitos.fetchall()
+    cursor.execute(query, (id_caso,))
+    resultado = cursor.fetchall()
 
+    print(f"\n--- {tabela_alvo.upper()} ENCONTRADOS ---")
     if resultado:
-        print(f"\n SUSPEITOS DO CASO ID {id_escolhido} ")
         pprint(resultado)
     else:
-        print(
-            "\n Nenhum suspeito cadastrado para este caso ou o ID digitado é inválido."
-        )
+        print(f"Nenhum registro de {tabela_alvo} para este caso.")
+
+
+def gerenciar_caso_especifico():
+    print("\n================ CASOS DISPONÍVEIS ================")
+    cursor.execute("SELECT id, titulo, tipo_crime FROM casos")
+    pprint(cursor.fetchall())
+    print("===================================================\n")
+
+    id_caso = input("Digite o ID do caso que deseja investigar: ")
+
+    cursor.execute("SELECT titulo FROM casos WHERE id = ?", (id_caso,))
+    caso_existe = cursor.fetchone()
+
+    if not caso_existe:
+        print("\n❌ ID de caso inválido!")
+        return
+
+    while True:
+        print("\n" + "-" * 40)
+        print(f" INVESTIGANDO: {caso_existe[0].upper()} ")
+        print("-" * 40)
+        print("1- Ver Suspeitos")
+        print("2- Ver Evidências")
+        print("3- Ver Testemunhas")
+        print("0- Voltar ao Menu Principal")
+        print("-" * 40)
+
+        sub_opcao = input("Escolha o que ver: ")
+
+        if sub_opcao == "1":
+            buscar_dados_por_caso(id_caso, "suspeitos")
+        elif sub_opcao == "2":
+            buscar_dados_por_caso(id_caso, "evidencias")
+        elif sub_opcao == "3":
+            buscar_dados_por_caso(id_caso, "testemunhas")
+        elif sub_opcao == "0":
+            break
+        else:
+            print("\n❌ Opção inválida!")
 
 
 def cadastrar_novo_suspeito():
-    print("\n SELECIONE O CASO RELACIONADO ")
+    print("\n--- SELECIONE O CASO RELACIONADO ---")
     cursor.execute("SELECT id, titulo FROM casos")
-    casos = cursor.fetchall()
-    pprint(casos)
+    pprint(cursor.fetchall())
 
     id_caso = input(
         "\nDigite o ID do caso ao qual este suspeito está envolvido: "
     )
 
-    print("\n INFORMAÇÕES DO SUSPEITO ")
+    print("\n--- INFORMAÇÕES DO SUSPEITO ---")
     nome = input("Nome completo do suspeito: ")
     data_nascimento = input("Data de nascimento (AAAA-MM-DD): ")
     cpf = input("CPF (xxx.xxx.xxx-xx): ")
@@ -68,28 +104,28 @@ def cadastrar_novo_suspeito():
         )
     except sqlite3.IntegrityError:
         print(
-            "\n❌ Erro: Este ID de caso não existe ou o CPF digitado já está cadastrado!"
+            "\n Erro: Este ID de caso não existe ou o CPF digitado já está cadastrado!"
         )
 
 
 while True:
-    print("\n" + "=" * 40)
+
     print("      SISTEMA DE INVESTIGAÇÃO POLICIAL      ")
-    print("=" * 40)
-    print(" Ver Casos e Listar Suspeitos")
-    print(" Cadastrar Novo Suspeito")
-    print(" Sair do Sistema")
-    print("=" * 40)
+    print("-" * 40)
+    print("1- Selecionar Caso e Investigar Detalhes")
+    print("2- Cadastrar Novo Suspeito")
+    print("0- Sair do Sistema")
+    print("-" * 40)
 
     opcao = input("Escolha uma opção: ")
 
     if opcao == "1":
-        listar_e_buscar_suspeitos()
+        gerenciar_caso_especifico()
     elif opcao == "2":
         cadastrar_novo_suspeito()
     elif opcao == "0":
-        print("\n Encerrando o sistema e fechando o banco de dados. Até logo!")
+        print("\n Encerrando o sistema.")
         conexao.close()
         break
     else:
-        print("\n❌ Opção inválida! Digite 1, 2 ou 0.")
+        print("\n Opção inválida! Digite 1, 2 ou 0.")
